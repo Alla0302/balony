@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Склад балонів — голосовий помічник</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0C2B28; --ink2:#103a35; --card:#12433d; --card2:#0f3a34;
+  --line:#1f5a52; --text:#EAF6F4; --muted:#8FB3AE;
+  --gold:#F4B43C; --aqua:#38D6C4; --warn:#FF6B6B; --ok:#7ED9A6;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:radial-gradient(120% 80% at 50% -10%, #14524a 0%, var(--ink) 55%, #081f1c 100%);
+  color:var(--text); font-family:'Manrope',system-ui,sans-serif;
+  min-height:100vh; padding:18px 16px 40px; -webkit-tap-highlight-color:transparent;
+}
+.wrap{max-width:520px; margin:0 auto}
+.head{display:flex; align-items:baseline; gap:10px; margin:4px 2px 16px}
+.head h1{font-family:'Baloo 2',cursive; font-weight:800; font-size:22px; margin:0; letter-spacing:.2px}
+.head .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+.head span{color:var(--muted); font-size:12.5px; margin-left:auto}
+
+.hero{background:linear-gradient(160deg,var(--card),var(--card2));
+  border:1px solid var(--line); border-radius:22px; padding:20px 20px 16px; position:relative; overflow:hidden}
+.hero::after{content:""; position:absolute; right:-40px; top:-50px; width:160px;height:160px;
+  background:radial-gradient(circle,rgba(244,180,60,.22),transparent 70%)}
+.hero .lab{font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--muted)}
+.hero .big{font-family:'Baloo 2',cursive; font-weight:800; font-size:62px; line-height:1; margin:6px 0 2px; color:#fff}
+.hero .big small{font-family:'Manrope'; font-weight:600; font-size:18px; color:var(--muted); margin-left:6px}
+.hero .stats{display:flex; gap:22px; margin-top:12px}
+.hero .stats div b{font-family:'Baloo 2'; font-weight:700; font-size:20px; display:block; color:var(--gold)}
+.hero .stats div span{font-size:11.5px; color:var(--muted)}
+
+.mic-card{margin-top:16px; text-align:center}
+.mic{width:108px;height:108px;border-radius:50%; border:none; cursor:pointer; margin:6px auto 0;
+  background:radial-gradient(circle at 50% 35%,#1c6a60,#0c3a34); color:var(--aqua);
+  display:flex;align-items:center;justify-content:center; position:relative; transition:transform .12s}
+.mic svg{width:42px;height:42px}
+.mic:active{transform:scale(.96)}
+.mic.live{color:#062a26;background:radial-gradient(circle at 50% 35%,var(--aqua),#15a99a)}
+.mic.live::before,.mic.live::after{content:"";position:absolute;inset:-6px;border-radius:50%;
+  border:2px solid var(--aqua); animation:pulse 1.6s ease-out infinite}
+.mic.live::after{animation-delay:.8s}
+@keyframes pulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.5);opacity:0}}
+.status{font-size:13px;color:var(--muted);margin-top:12px;min-height:18px}
+.bubble{margin:12px auto 0;max-width:96%;background:#0c322d;border:1px solid var(--line);
+  border-radius:14px;padding:11px 14px;font-size:15px;min-height:20px;text-align:left}
+.bubble.you{color:var(--muted);font-style:italic}
+.bubble.me{color:var(--text);border-color:#2a6b62;background:#0e3a34}
+.bubble.me b{color:var(--gold)}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:14px 2px 0;justify-content:center}
+.chip{font-size:12px;color:var(--muted);background:#0e342f;border:1px solid var(--line);
+  padding:6px 11px;border-radius:20px}
+
+.sec{margin-top:26px}
+.sec h2{font-family:'Baloo 2';font-weight:700;font-size:15px;margin:0 2px 10px;color:var(--text);
+  display:flex;align-items:center;gap:8px}
+.sec h2 .ln{flex:1;height:1px;background:var(--line)}
+.row{display:grid;grid-template-columns:34px 1fr auto auto;align-items:center;gap:10px;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:8px}
+.row .n{font-family:'Baloo 2';font-weight:800;font-size:17px;color:var(--gold);text-align:center}
+.row .t b{font-size:15px} .row .t small{display:block;color:var(--muted);font-size:11.5px}
+.row .q{text-align:right;font-family:'Baloo 2';font-weight:700;font-size:18px}
+.row .q small{display:block;font-family:'Manrope';font-weight:500;font-size:10.5px;color:var(--muted)}
+.pill{font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.pill.ok{background:rgba(126,217,166,.14);color:var(--ok)}
+.pill.lo{background:rgba(255,107,107,.16);color:var(--warn)}
+.pill.na{background:#0e342f;color:var(--muted)}
+.add{background:none;border:1px dashed var(--line);color:var(--muted);border-radius:50%;
+  width:30px;height:30px;font-size:18px;cursor:pointer;line-height:1}
+
+.btnrow{display:flex;gap:8px;margin-top:6px}
+.btn{flex:1;border:1px solid var(--line);background:#0e342f;color:var(--text);
+  padding:11px;border-radius:12px;font-size:13.5px;font-family:'Manrope';font-weight:600;cursor:pointer}
+.btn.gold{background:var(--gold);color:#3a2a05;border-color:var(--gold)}
+.btn.ghost{background:none}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:10px;display:none}
+.panel.open{display:block}
+.cfgrow{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:center;margin-bottom:9px}
+.cfgrow .n{font-family:'Baloo 2';font-weight:800;color:var(--gold);text-align:center}
+.fields{display:grid;grid-template-columns:1fr 64px 70px;gap:6px}
+input,select{width:100%;background:#0a2c28;border:1px solid var(--line);color:var(--text);
+  border-radius:9px;padding:9px;font-size:13.5px;font-family:'Manrope'}
+label{font-size:11.5px;color:var(--muted);display:block;margin:2px 0}
+.modal{position:fixed;inset:0;background:rgba(4,18,16,.72);display:none;align-items:flex-end;z-index:9}
+.modal.open{display:flex}
+.sheet{background:var(--ink2);border:1px solid var(--line);border-radius:20px 20px 0 0;
+  width:100%;max-width:520px;margin:0 auto;padding:18px 16px 26px}
+.sheet h3{font-family:'Baloo 2';margin:2px 0 14px;font-size:17px}
+.note{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:14px}
+@media (prefers-reduced-motion:reduce){.mic.live::before,.mic.live::after{animation:none;opacity:.4}}
+:focus-visible{outline:2px solid var(--aqua);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><span class="dot"></span><h1>Склад балонів</h1><span>Гостинцеве</span></div>
+
+  <div class="hero">
+    <div class="lab">Загальний залишок</div>
+    <div class="big"><span id="totalQty">0</span><small>шт</small></div>
+    <div class="stats">
+      <div><b id="totalKul">0</b><span>кульок</span></div>
+      <div><b id="totalRev">0</b><span>виручка, грн</span></div>
+      <div><b id="lowN">0</b><span>типів мало</span></div>
+    </div>
+  </div>
+
+  <div class="mic-card">
+    <button class="mic" id="mic" aria-label="Говорити">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+        <path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>
+    </button>
+    <div class="status" id="status">Натисни й говори українською</div>
+    <div class="bubble you" id="heard"></div>
+    <div class="bubble me" id="reply">Привіт! Спитай «загальний залишок» або скажи «відправила двадцять штук балон номер один».</div>
+    <div class="chips">
+      <span class="chip">«загальний залишок»</span>
+      <span class="chip">«відправила двадцять балон один»</span>
+      <span class="chip">«скільки балон два»</span>
+      <span class="chip">«що довезти»</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>Балони <span class="ln"></span>
+      <button class="add" id="manualBtn" title="Додати подію">＋</button></h2>
+    <div id="rows"></div>
+  </div>
+
+  <div class="btnrow">
+    <button class="btn ghost" id="cfgBtn">⚙️ Налаштування</button>
+    <button class="btn ghost" id="ioBtn">⇅ Дані</button>
+  </div>
+
+  <div class="panel" id="cfgPanel">
+    <div style="display:grid;grid-template-columns:1fr 70px;gap:8px;margin-bottom:12px">
+      <div><label>Мінімальний залишок для ⚠ (шт)</label></div>
+      <input id="thr" type="number" inputmode="numeric">
+    </div>
+    <div class="fields" style="margin-bottom:4px"><label>Опис типу</label><label>Кульок</label><label>Ціна, грн</label></div>
+    <div id="cfgRows"></div>
+    <div class="btnrow"><button class="btn gold" id="cfgSave">Зберегти налаштування</button></div>
+  </div>
+
+  <div class="panel" id="ioPanel">
+    <label>Посилання на дані (telegram_events.json з GitHub)</label>
+    <input id="dataUrl" type="url" placeholder="https://raw.githubusercontent.com/.../telegram_events.json">
+    <div class="btnrow" style="margin-top:8px"><button class="btn gold" id="syncBtn">🔄 Оновити з сервера</button></div>
+    <div class="note" id="syncInfo" style="margin:6px 0 12px">Якщо вписати посилання — сторінка оновлюється сама при відкритті.</div>
+    <div class="btnrow"><button class="btn" id="exp">⬇ Зберегти JSON</button>
+      <button class="btn" id="imp">⬆ Завантажити JSON</button></div>
+    <input id="impFile" type="file" accept="application/json" style="display:none">
+    <div class="btnrow"><button class="btn ghost" id="impTg">⤓ Підтягнути з файлу (запасний варіант)</button></div>
+    <input id="impTgFile" type="file" accept="application/json" style="display:none">
+    <div class="btnrow"><button class="btn ghost" id="clr" style="color:var(--warn)">Очистити всі події</button></div>
+    <div class="note">Відвантаження з Telegram зливаються з твоїми голосовими надходженнями — дублі не рахуються двічі. Залишок = завезла − відвантажено.</div>
+  </div>
+
+  <div class="note" style="text-align:center;margin-top:22px">
+    Працює в Chrome. Розпізнавання мови — українською.
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3 id="mTitle">Додати подію</h3>
+    <label>Балон</label>
+    <select id="mBalon"></select>
+    <div style="height:10px"></div>
+    <label>Тип події</label>
+    <select id="mType">
+      <option value="Надходження">Надходження (+ на склад)</option>
+      <option value="Відправка">Відправка (− зі складу)</option>
+      <option value="Повернення">Повернення (+ назад)</option>
+    </select>
+    <div style="height:10px"></div>
+    <label>Кількість</label>
+    <input id="mQty" type="number" inputmode="numeric" value="1">
+    <div class="btnrow" style="margin-top:16px">
+      <button class="btn ghost" id="mCancel">Скасувати</button>
+      <button class="btn gold" id="mSave">Додати</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- сховище (з безпечним відкатом у памʼять) ---------- */
+const KEY='balony_voice_v1';
+let mem=null;
+function store(obj){ try{localStorage.setItem(KEY,JSON.stringify(obj))}catch(e){mem=obj} }
+function load(){ try{const r=localStorage.getItem(KEY); return r?JSON.parse(r):null}catch(e){return mem} }
+
+const DEFAULT={
+  threshold:10, currency:'грн', dataUrl:'',
+  types:[{n:'1',opis:'',kul:50,price:0,start:0},{n:'2',opis:'',kul:30,price:0,start:0},
+         {n:'3',opis:'',kul:0,price:0,start:0},{n:'4',opis:'',kul:0,price:0,start:0},
+         {n:'5',opis:'',kul:0,price:0,start:0},{n:'6',opis:'',kul:0,price:0,start:0}],
+  events:[]
+};
+let S=load()||structuredClone(DEFAULT);
+
+/* ---------- підрахунок ---------- */
+function typ(n){return S.types.find(t=>t.n===String(n))}
+function balance(n){
+  const t=typ(n); if(!t) return 0;
+  let q=Number(t.start)||0;
+  for(const e of S.events){ if(e.balon!==String(n)) continue;
+    const k=(e.type==='Відправка')?-1:1; q+=k*(Number(e.qty)||0); }
+  return q;
+}
+function revenue(n){
+  const t=typ(n); if(!t) return 0; let r=0;
+  for(const e of S.events){ if(e.balon!==String(n)) continue;
+    if(e.type==='Відправка') r+=(Number(e.qty)||0)*(Number(t.price)||0);
+    if(e.type==='Повернення') r-=(Number(e.qty)||0)*(Number(t.price)||0); }
+  return r;
+}
+const sum=f=>S.types.reduce((a,t)=>a+f(t.n),0);
+
+/* ---------- числівники укр ---------- */
+const norm=s=>s.toLowerCase().replace(/[ʼ'’`]/g,'').replace(/ё/g,'е');
+const U={нуль:0,один:1,одна:1,одне:1,два:2,дві:2,две:2,три:3,чотири:4,пять:5,шість:6,шесть:6,сім:7,семь:7,
+ вісім:8,восемь:8,девять:9,десять:10,одинадцять:11,дванадцять:12,тринадцять:13,чотирнадцять:14,пятнадцять:15,
+ шістнадцять:16,сімнадцять:17,вісімнадцять:18,девятнадцять:19};
+const T={двадцять:20,тридцять:30,сорок:40,пятдесят:50,шістдесят:60,сімдесят:70,вісімдесят:80,девяносто:90};
+const H={сто:100,двісті:200,триста:300,чотириста:400,пятсот:500,шістсот:600,сімсот:700,вісімсот:800,девятсот:900};
+function wordsToNum(tokens){ // повертає {val,consumed} або null
+  let val=0,used=0,any=false;
+  for(const tk of tokens){ const w=norm(tk);
+    if(/^\d+$/.test(w)){val+=parseInt(w);used++;any=true;continue;}
+    if(H[w]!=null){val+=H[w];used++;any=true;continue;}
+    if(T[w]!=null){val+=T[w];used++;any=true;continue;}
+    if(U[w]!=null){val+=U[w];used++;any=true;continue;}
+    break;
+  }
+  return any?{val,used}:null;
+}
+
+/* ---------- розбір команди ---------- */
+function parseCommand(text){
+  const raw=text.trim(); const t=norm(raw); const tok=t.split(/\s+/);
+  // балон: число після "номер"/"балон"
+  let balon=null, balonIdx=-1, balonLen=0;
+  for(let i=0;i<tok.length;i++){
+    if(/^(номер|балон|балона|балончик)/.test(tok[i])){
+      const r=wordsToNum(tok.slice(i+1,i+3));
+      if(r){balon=String(r.val); balonIdx=i; balonLen=1+r.used; break;}
+    }
+  }
+  // намір (на цій сторінці ти ЗАВОЗИШ на склад → «відправила/завезла» = Надходження)
+  let intent=null;
+  if(/поверн|переадрес|не відправл|не вези|забери назад/.test(t)) intent='Повернення';
+  else if(/відправ|відвезл|відвантаж|завез|завоз|привіз|привез|додай|поповн|надход|надійшл|прийшл|здал|віддал|закинул|підвез/.test(t)) intent='Надходження';
+  const isQuery=/залиш|скільки|загальн|всього|виручк|куль|мало|довез|статус|що там/.test(t) && !intent;
+  // кількість: перша числова група, що НЕ балон
+  let qty=null;
+  for(let i=0;i<tok.length;i++){
+    if(i>=balonIdx && i<balonIdx+balonLen && balonIdx>=0) {i=balonIdx+balonLen-1; continue;}
+    const r=wordsToNum(tok.slice(i, i+4));
+    if(r){qty=r.val; break;}
+  }
+  if(isQuery){
+    let kind='total';
+    if(/виручк/.test(t)) kind='revenue';
+    else if(/куль/.test(t)) kind='kulky';
+    else if(/мало|довез/.test(t)) kind='low';
+    else if(balon) kind='balon';
+    return {mode:'query',kind,balon};
+  }
+  if(intent){
+    return {mode:'event',type:intent,balon,qty:qty};
+  }
+  return {mode:'unknown'};
+}
+
+/* ---------- виконання ---------- */
+function f(n){return new Intl.NumberFormat('uk-UA').format(Math.round(n))}
+function speak(s){ try{const u=new SpeechSynthesisUtterance(s); u.lang='uk-UA';
+  const v=speechSynthesis.getVoices().find(v=>/uk|ua/i.test(v.lang)); if(v)u.voice=v;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);}catch(e){} }
+function reply(html,voice){ document.getElementById('reply').innerHTML=html; if(voice!==false) speak((voice||html).replace(/<[^>]+>/g,'')); }
+
+function lowList(){ return S.types.filter(t=>(t.kul>0||balance(t.n)!==0) && balance(t.n)<S.threshold); }
+
+function runQuery(c){
+  if(c.kind==='total'){ const q=sum(balance);
+    return reply(`На складі загалом <b>${f(q)} шт</b>.`); }
+  if(c.kind==='kulky'){ const k=sum(n=>balance(n)*(typ(n).kul||0));
+    return reply(`Це приблизно <b>${f(k)} кульок</b> загалом.`); }
+  if(c.kind==='revenue'){ const r=sum(revenue);
+    return reply(`Загальна виручка <b>${f(r)} ${S.currency}</b>.`); }
+  if(c.kind==='low'){ const l=lowList();
+    if(!l.length) return reply('Усього вистачає, довозити нічого не треба.');
+    return reply('Мало: '+l.map(t=>`<b>№${t.n}</b> (${f(balance(t.n))} шт)`).join(', ')+'.'); }
+  if(c.kind==='balon'){ const t=typ(c.balon);
+    if(!t) return reply(`Не знаю балон номер ${c.balon||'?'}.`);
+    return reply(`Балон <b>№${t.n}</b>${t.opis?' ('+t.opis+')':''}: <b>${f(balance(t.n))} шт</b> на складі.`); }
+}
+function addEvent(type,balon,qty){
+  if(!balon||!typ(balon)) { reply('Не зрозуміла, який балон. Скажи «номер один».'); return; }
+  qty=Math.abs(Number(qty)||1);
+  S.events.push({id:'v'+Date.now()+Math.random().toString(36).slice(2,6),date:new Date().toISOString().slice(0,10),balon:String(balon),type,qty});
+  save(); render();
+  const verb=type==='Надходження'?'завезла на склад':type==='Відправка'?'відвантажено':'повернуто';
+  reply(`Готово: <b>${verb} ${f(qty)} шт</b> балона №${balon}. Тепер на складі <b>${f(balance(balon))} шт</b>.`);
+}
+function handle(text){
+  document.getElementById('heard').textContent='«'+text+'»';
+  const c=parseCommand(text);
+  if(c.mode==='query') return runQuery(c);
+  if(c.mode==='event'){
+    let q=c.qty;
+    if(q==null){ if(c.type==='Надходження') return reply('Скільки штук? Скажи, наприклад, «двадцять штук балон один».'); q=1; }
+    return addEvent(c.type,c.balon,q);
+  }
+  reply('Не зрозуміла. Спробуй «загальний залишок» або «відправила двадцять балон один».');
+}
+
+/* ---------- рендер ---------- */
+function save(){ store(S) }
+function render(){
+  document.getElementById('totalQty').textContent=f(sum(balance));
+  document.getElementById('totalKul').textContent=f(sum(n=>balance(n)*(typ(n).kul||0)));
+  document.getElementById('totalRev').textContent=f(sum(revenue));
+  document.getElementById('lowN').textContent=lowList().length;
+  const rows=document.getElementById('rows'); rows.innerHTML='';
+  for(const t of S.types){
+    const q=balance(t.n), active=(t.kul>0||q!==0);
+    let pill = !active ? '<span class="pill na">—</span>'
+      : q<S.threshold ? '<span class="pill lo">⚠ мало</span>' : '<span class="pill ok">✅</span>';
+    const el=document.createElement('div'); el.className='row';
+    el.innerHTML=`<div class="n">${t.n}</div>
+      <div class="t"><b>${t.opis||'Балон №'+t.n}</b><small>${t.kul?t.kul+' кульок · ':''}${f(revenue(t.n))} грн</small></div>
+      <div class="q">${f(q)}<small>шт</small></div>
+      <div>${pill}</div>`;
+    el.querySelector('.n').onclick=()=>openModal(t.n);
+    rows.appendChild(el);
+  }
+}
+
+/* ---------- модалка ручного вводу ---------- */
+const modal=document.getElementById('modal');
+function openModal(balon){
+  const sel=document.getElementById('mBalon'); sel.innerHTML='';
+  S.types.forEach(t=>{const o=document.createElement('option');o.value=t.n;
+    o.textContent='№'+t.n+(t.opis?' — '+t.opis:''); sel.appendChild(o);});
+  if(balon) sel.value=balon;
+  document.getElementById('mQty').value=1;
+  modal.classList.add('open');
+}
+document.getElementById('manualBtn').onclick=()=>openModal();
+document.getElementById('mCancel').onclick=()=>modal.classList.remove('open');
+document.getElementById('mSave').onclick=()=>{
+  addEvent(document.getElementById('mType').value, document.getElementById('mBalon').value,
+           document.getElementById('mQty').value);
+  modal.classList.remove('open');
+};
+
+/* ---------- налаштування ---------- */
+function buildCfg(){
+  document.getElementById('thr').value=S.threshold;
+  const box=document.getElementById('cfgRows'); box.innerHTML='';
+  S.types.forEach((t,i)=>{
+    const r=document.createElement('div'); r.className='cfgrow';
+    r.innerHTML=`<div class="n">${t.n}</div><div class="fields">
+      <input data-i="${i}" data-k="opis" value="${t.opis||''}" placeholder="опис">
+      <input data-i="${i}" data-k="kul" type="number" inputmode="numeric" value="${t.kul||0}">
+      <input data-i="${i}" data-k="price" type="number" inputmode="numeric" value="${t.price||0}"></div>`;
+    box.appendChild(r);
+  });
+}
+document.getElementById('cfgBtn').onclick=()=>{buildCfg();document.getElementById('cfgPanel').classList.toggle('open')};
+document.getElementById('ioBtn').onclick=()=>document.getElementById('ioPanel').classList.toggle('open');
+document.getElementById('cfgSave').onclick=()=>{
+  S.threshold=Number(document.getElementById('thr').value)||0;
+  document.querySelectorAll('#cfgRows input').forEach(inp=>{
+    const i=+inp.dataset.i,k=inp.dataset.k; S.types[i][k]=(k==='opis')?inp.value:Number(inp.value)||0;});
+  save();render();document.getElementById('cfgPanel').classList.remove('open');
+  reply('Налаштування збережено.',false);
+};
+
+/* ---------- експорт/імпорт ---------- */
+document.getElementById('exp').onclick=()=>{
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='balony_zalyshky.json'; a.click();
+};
+document.getElementById('imp').onclick=()=>document.getElementById('impFile').click();
+document.getElementById('impFile').onchange=e=>{
+  const fr=new FileReader(); fr.onload=()=>{try{S=JSON.parse(fr.result);save();render();
+    reply('Дані завантажено.',false);}catch(x){reply('Не вдалося прочитати файл.',false)}};
+  fr.readAsText(e.target.files[0]);
+};
+document.getElementById('clr').onclick=()=>{ if(confirm('Очистити всі події? Налаштування лишаться.')){
+  S.events=[]; save(); render(); reply('Події очищено.',false);} };
+
+/* спільне злиття подій без дублів за id */
+function mergeEvents(list){
+  const have=new Set(S.events.map(x=>x.id).filter(Boolean));
+  let added=0;
+  for(const ev of (Array.isArray(list)?list:(list&&list.events)||[])){
+    if(!ev.id || have.has(ev.id)) continue;
+    S.events.push({id:ev.id,date:ev.date||new Date().toISOString().slice(0,10),
+      balon:String(ev.balon),type:ev.type||'Відправка',qty:Number(ev.qty)||1});
+    have.add(ev.id); added++;
+  }
+  if(added){ save(); render(); }
+  return added;
+}
+
+/* запасний варіант — з файлу */
+document.getElementById('impTg').onclick=()=>document.getElementById('impTgFile').click();
+document.getElementById('impTgFile').onchange=e=>{
+  const fr=new FileReader();
+  fr.onload=()=>{ try{ const n=mergeEvents(JSON.parse(fr.result));
+    reply(n?`Підтягнуто <b>${n}</b> відвантажень.`:'Нових відвантажень немає.',false);
+  }catch(x){ reply('Не вдалося прочитати файл.',false); } };
+  fr.readAsText(e.target.files[0]);
+};
+
+/* авто-оновлення з сервера (GitHub) */
+const dataUrlInp=document.getElementById('dataUrl');
+const syncInfo=document.getElementById('syncInfo');
+dataUrlInp.value=S.dataUrl||'';
+dataUrlInp.onchange=()=>{ S.dataUrl=dataUrlInp.value.trim(); save(); };
+async function syncRemote(silent){
+  const url=(S.dataUrl||'').trim();
+  if(!url){ if(!silent) reply('Спочатку встав посилання на дані.',false); return; }
+  try{
+    syncInfo.textContent='Оновлюю…';
+    const r=await fetch(url+(url.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw 0;
+    const n=mergeEvents(await r.json());
+    const time=new Date().toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+    syncInfo.textContent=`Оновлено о ${time}` + (n?` · нових: ${n}`:'');
+    if(!silent) reply(n?`Підтягнуто <b>${n}</b> відвантажень.`:'Усе вже актуальне.',false);
+  }catch(e){ syncInfo.textContent='Не вдалося оновити (перевір посилання).'; }
+}
+document.getElementById('syncBtn').onclick=()=>syncRemote(false);
+if(S.dataUrl) syncRemote(true);   // тихе оновлення при відкритті
+
+/* ---------- голос ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const micBtn=document.getElementById('mic'); const statusEl=document.getElementById('status');
+let rec=null, listening=false;
+if(SR){
+  rec=new SR(); rec.lang='uk-UA'; rec.interimResults=true; rec.maxAlternatives=1;
+  let finalText='';
+  rec.onresult=ev=>{ let interim=''; finalText='';
+    for(let i=0;i<ev.results.length;i++){ const r=ev.results[i];
+      if(r.isFinal) finalText+=r[0].transcript; else interim+=r[0].transcript; }
+    document.getElementById('heard').textContent='«'+(finalText||interim)+'»'; };
+  rec.onend=()=>{ listening=false; micBtn.classList.remove('live'); statusEl.textContent='Натисни й говори українською';
+    if(finalText.trim()) handle(finalText.trim()); };
+  rec.onerror=e=>{ statusEl.textContent = e.error==='not-allowed'?'Дозволь доступ до мікрофона':'Не почула, спробуй ще'; };
+  micBtn.onclick=()=>{ if(listening){rec.stop();return;}
+    try{finalText=''; rec.start(); listening=true; micBtn.classList.add('live');
+      statusEl.textContent='Слухаю…'; }catch(e){} };
+}else{
+  statusEl.textContent='Голос недоступний у цьому браузері — користуйся кнопкою ＋';
+  micBtn.style.opacity=.4;
+}
+// прогрів голосів синтезу
+if('speechSynthesis' in window){ speechSynthesis.onvoiceschanged=()=>{}; }
+
+render();
+</script>
+</body>
+</html>
